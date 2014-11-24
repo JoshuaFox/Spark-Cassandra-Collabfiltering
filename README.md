@@ -52,13 +52,12 @@ cqlsh -f ./collabfilter/src/sql/collab_filter_schema.sql
 - Load data
 cqlsh -f ./collabfilter/src/sql/load_data.sql
 
+- Other materials:
+- You can find a collaborative filtering tutorial for Spark at https://spark.apache.org/docs/1.1.0/mllib-collaborative-filtering.html  and a tutorial on the Spark-Cassandra Java connector at http://www.datastax.com/dev/blog/accessing-cassandra-from-spark-in-java 
+- - Note on japi package: The Java API class was moved to the  japi subpackage ( https://github.com/datastax/spark-cassandra-connector/commit/36ad9cd6c13600144e3e27533587db926e41af2e ), so that the example code in the Spark-Cassandra tutorial is outdated.
+- This project uses some code from those, with some new elements: Java 8 closure syntax,  collaborative filtering on Cassandra data (rather than  filesystem), showing results of collaborative filtering.
+- Note on Guava version. The pom.xml specifies Guava 15. This is because the  Guava 14 used with the Spark-Cassandra connector is mismatched to the Guava expected by Spark.
 
-- Notes on the code: You can find a collaborative filtering tutorial for Spark at https://spark.apache.org/docs/1.1.0/mllib-collaborative-filtering.html 
-
-
-Guava 15 warning
-
-Japi package added? Removed?
-http://stackoverflow.com/questions/27110458/what-changed-in-the-cassandra-spark-integration-connector-package
+ 
 
 
