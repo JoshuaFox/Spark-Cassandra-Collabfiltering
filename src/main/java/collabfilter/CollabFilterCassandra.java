@@ -32,7 +32,7 @@ public class CollabFilterCassandra {
 		CassandraConnector connector = CassandraConnector.apply(sc.getConf());
 
 		try (Session session = connector.openSession()) {
-			CassandraJavaRDD<CassandraRow> cassRowRDD = javaFunctions(sc).cassandraTable("mykeyspace", "ratings");
+			CassandraJavaRDD<CassandraRow> cassRowRDD = javaFunctions(sc).cassandraTable("employerratings", "ratings");
 			JavaRDD<Rating> ratings = cassRowRDD.map(cassRow -> new Rating(cassRow.getInt("user_id"), cassRow.getInt("item_id"), cassRow.getDouble("rating")));
 
 			int rank = 10;
