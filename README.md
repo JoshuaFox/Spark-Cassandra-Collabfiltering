@@ -14,12 +14,12 @@ Does not include
 To setup on Ubuntu 14.04:
 Install JDK Java8 
 ````sudo apt-get install oracle-java8-installer````
-Get Spark](http://spark.apache.org/downloads.html)
+Get [Spark](http://spark.apache.org/downloads.html)
 - Download 1.1.0 for Hadoop 2.4. We will not be using Hadoop/HDFS/HBase, but rather Cassandra.
-- Untar the spark tarball. (I put it in ~/dev.)
+- Untar the spark tarball. (E.g., in ````~/dev````)
 - Test the installation with 
 ````./bin/run-example SparkPi````
-- QuickStart has more on setup  https://spark.apache.org/docs/1.1.0/quick-start.html
+- QuickStart has [more on setup](https://spark.apache.org/docs/1.1.0/quick-start.html)
 
 Get Eclipse
 - Download Eclipse Luna 4.4.1 Ubuntu 64 Bit (or 32 Bit) from https://eclipse.org/downloads/
