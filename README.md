@@ -13,16 +13,13 @@ Does not include
 
 To setup on Ubuntu 14.04
 - Get JDK Java8 with
-
     sudo apt-get install oracle-java8-installer
 
-- Get Spark from http://spark.apache.org/downloads.html 
+- Get Spark from http://spark.apache.org/downloads.html
 - Download 1.1.0 for Hadoop 2.4. We will not be using Hadoop/HDFS/HBase, but rather Cassandra.
 - Untar the spark tarball. (I put it in ~/dev.)
 - Test the installation with 
-
     ./bin/run-example SparkPi
-
 - QuickStart has more on setup  https://spark.apache.org/docs/1.1.0/quick-start.html
 
 - Get Eclipse
@@ -37,9 +34,8 @@ To setup on Ubuntu 14.04
 
 - Right-click on *pom.xml*, choose build, target install.
 - This will now download Spark jars; it will take a while.
-- It will also set your Eclipse project's  source level to Java 8.
+- It will also set your Eclipse project's source level to Java 8.
  
-
 - Get Cassandra
 - Instructions [here](http://www.datastax.com/documentation/cassandra/2.0/cassandra/install/installDeb_t.html)
 - Run Cassandra
@@ -59,9 +55,9 @@ To setup on Ubuntu 14.04
 - You can find a [collaborative filtering tutorial for Spark](https://spark.apache.org/docs/1.1.0/mllib-collaborative-filtering.html)  and a [tutorial on the Spark-Cassandra Java connector](http://www.datastax.com/dev/blog/accessing-cassandra-from-spark-in-java) 
 - Note: The example code in the Spark-Cassandra tutorial is outdated. The Java API class was [moved to](https://github.com/datastax/spark-cassandra-connector/commit/36ad9cd6c13600144e3e27533587db926e41af2e)  the  japi subpackage.
 - This project uses some code from those, with some new elements:
--- Java 8 closure syntax
--- Collaborative filtering on Cassandra data (rather than  filesystem)
--- Displaying the  results of collaborative filtering.
+- Java 8 closure syntax
+- Collaborative filtering on Cassandra data (rather than  filesystem)
+- Displaying the  results of collaborative filtering.
 - Note on Guava version. The *pom.xml* specifies Guava 15. This is because the  Guava 14 used with the Spark-Cassandra connector is mismatched to the Guava expected by Spark.
 
  
