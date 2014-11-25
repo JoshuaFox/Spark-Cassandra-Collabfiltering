@@ -21,7 +21,6 @@
 			<artifactId>spark-mllib_2.10</artifactId>
 			<version>1.1.0</version>
 		</dependency>
-
 		<dependency>
 			<groupId>org.apache.spark</groupId>
 			<artifactId>spark-streaming_2.10</artifactId>
@@ -43,7 +42,7 @@
 			<artifactId>spark-cassandra-connector-java_2.10</artifactId>
 			 <version>1.1.0-rc2</version> 
 		</dependency>
-		<dependency>
+		<dependency><!-- Needed because of mismatch in dependencies in Spark-Cassandra connector-->
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
 			<version>15.0</version>
