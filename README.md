@@ -39,9 +39,7 @@ Get Cassandra
 - Instructions [here](http://www.datastax.com/documentation/cassandra/2.0/cassandra/install/installDeb_t.html)
 - Run Cassandra
 ````sudo /usr/bin/cassandra````
-- This is for development only. We will be running Cassandra and Spark locally with console, rather than remotely in a cluster as daemon/service.
-- For a Cassandra command line client, run  
-````/usr/bin/cqlsh````
+- This is for development only. We will be runnning Cassandra and Spark locally with console, rather than remotely in a cluster as daemon/service.
 - Create schema by running attached SQL.
 - In workspace root, run
  ````cqlsh -f ./collabfilter/src/sql/collab_filter_schema.sql````
