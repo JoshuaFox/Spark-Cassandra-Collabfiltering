@@ -2,24 +2,23 @@ spark-cassandra-collabfiltering
 ===============================
 
 Illustrates:
-- Collaborative filtering with MLLib
-- on Spark 
-- Spark with Java (rather than Spark's core language, Scala)
-- using data in Cassandra
-- a small data set of employees rating the companies they work at
+- Collaborative filtering with MLLib on Spark 
+- Using  Java (rather than Spark's core language, Scala)
+- Using data in Cassandra (rather than HBase/HDFS or some other a filesystem)
+- A demo data set and validation set of employee ratings for  the companies they work at
 
-Does not include
+Does not illustrate:
 - Clustering of Spark or Cassandra
 
 To setup on Ubuntu 14.04:
 Install JDK Java8 
 ````sudo apt-get install oracle-java8-installer````
 Get [Spark](http://spark.apache.org/downloads.html)
-- Download 1.1.0 for Hadoop 2.4. We will not be using Hadoop/HDFS/HBase, but rather Cassandra.
+- Download 1.1.0 for Hadoop 2.4. We will not be using Hadoop even though this build supports it.
 - Untar the spark tarball. (E.g., in ````~/dev````)
 - Test the installation with 
 ````./bin/run-example SparkPi````
-- QuickStart has [more on setup](https://spark.apache.org/docs/1.1.0/quick-start.html)
+- See QuickStart in References below. 
 
 Get Eclipse
 - Download Eclipse Luna 4.4.1 Ubuntu 64 Bit (or 32 Bit) from https://eclipse.org/downloads/
@@ -47,13 +46,11 @@ Cassandra
 ````cqlsh -f ./collabfilter/src/sql/load_data.sql````
 
 References:
-- You can find a [collaborative filtering tutorial for Spark](https://spark.apache.org/docs/1.1.0/mllib-collaborative-filtering.html)  and a [tutorial on the Spark-Cassandra Java connector](http://www.datastax.com/dev/blog/accessing-cassandra-from-spark-in-java) 
-- Note: The example code in the Spark-Cassandra tutorial is outdated. The Java API class was [moved to](https://github.com/datastax/spark-cassandra-connector/commit/36ad9cd6c13600144e3e27533587db926e41af2e)  the  japi subpackage.
-- Bug in Guava version. The````pom.xml```` specifies Guava 15. This is because the Guava 14 used with the Spark-Cassandra connector is mismatched to the Guava expected by Spark.
-- This project uses some code from those, with some new elements:
-  - Java 8 closure syntax
-  - Collaborative filtering on Cassandra data (rather than filesystem)
-  - Displaying the results of collaborative filtering against a validation set
+- QuickStart has [more on setup](https://spark.apache.org/docs/1.1.0/quick-start.html)
+- You can find a [collaborative filtering tutorial for Spark](https://spark.apache.org/docs/1.1.0/mllib-collaborative-filtering.html)  and a [tutorial on the Spark-Cassandra Java connector](http://www.datastax.com/dev/blog/accessing-cassandra-from-spark-in-java) which I drew on.
+- However, note that the example code in the Spark-Cassandra tutorial is outdated. The Java API class was [moved to](https://github.com/datastax/spark-cassandra-connector/commit/36ad9cd6c13600144e3e27533587db926e41af2e)  the  japi subpackage.
+- Bug in Guava version. The ````pom.xml```` specifies Guava 15. This is because the Guava 14 used with the Spark-Cassandra connector is mismatched to the Guava 15 or above expected by Spark, which includes additional methods.
+
  
 
 
