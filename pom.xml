@@ -9,7 +9,11 @@
 
 	<name>collabfiltering</name>
 	<url>http://maven.apache.org</url>
-
+	<properties>
+		<project.build.sourceEncoding>
+			UTF-8
+		</project.build.sourceEncoding>
+	</properties>
 	<dependencies>
 		<dependency> <!-- Spark dependency -->
 			<groupId>org.apache.spark</groupId>
@@ -40,29 +44,31 @@
 		<dependency>
 			<groupId>com.datastax.spark</groupId>
 			<artifactId>spark-cassandra-connector-java_2.10</artifactId>
-			 <version>1.1.0-rc2</version> 
+			<version>1.1.0-rc2</version>
 		</dependency>
-		<dependency><!-- Needed because of mismatch in dependencies in Spark-Cassandra connector-->
+		<dependency><!-- Needed because of mismatch in dependencies in Spark-Cassandra 
+				connector -->
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
 			<version>15.0</version>
 		</dependency>
 
 	</dependencies>
-	
+
 	<build>
- 
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <source>1.8</source>
-          <target>1.8</target>
-        </configuration>
-      </plugin>
-    </plugins>
- 
-  </build>
+
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.3.2</version>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+				</configuration>
+			</plugin>
+		</plugins>
+
+	</build>
 </project>
  
