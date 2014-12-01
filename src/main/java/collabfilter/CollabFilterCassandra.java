@@ -2,12 +2,12 @@ package collabfilter;
 
 import static com.datastax.spark.connector.japi.CassandraJavaUtil.javaFunctions;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.commons.lang.Validate;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaDoubleRDD;
 import org.apache.spark.api.java.JavaPairRDD;
@@ -17,8 +17,12 @@ import org.apache.spark.api.java.function.Function;
 import org.apache.spark.mllib.recommendation.ALS;
 import org.apache.spark.mllib.recommendation.MatrixFactorizationModel;
 import org.apache.spark.mllib.recommendation.Rating;
+import org.apache.spark.rdd.RDD;
+import org.netlib.util.intW;
 
 import scala.Tuple2;
+
+import tachyon.thrift.MasterService.Processor.liststatus;
 
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.utils.UUIDs;
@@ -124,45 +128,55 @@ public class CollabFilterCassandra {
 	private static void trainAndValidate(JavaSparkContext sc) {
 		CassandraJavaRDD<CassandraRow> trainingRdd = javaFunctions(sc).cassandraTable(EMPLOYERRATINGS_KEYSPACE, RATINGS_TABLE);
 		JavaRDD<Rating> trainingJavaRdd = trainingRdd.map(trainingRow -> new Rating(trainingRow.getInt(USER_COL), trainingRow.getInt(PRODUCT_COL), trainingRow.getDouble(RATING_COL)));
-		MatrixFactorizationModel model = ALS.train(JavaRDD.toRDD(trainingJavaRdd), 10, 30, 0.01);
-		validate(sc, model, trainingJavaRdd);
+		MatrixFactorizationModel model = ALS.train(JavaRDD.toRDD(trainingJavaRdd), 1, 20, 0.01);
+		predict(sc, model, trainingJavaRdd);
 	}
 
-	private static void validate(JavaSparkContext sc, MatrixFactorizationModel model, JavaRDD<Rating> trainingJavaRdd) {
+	private static void predict(JavaSparkContext sc, MatrixFactorizationModel model, JavaRDD<Rating> trainingJavaRdd) {
 		CassandraJavaRDD<CassandraRow> validationsCassRdd = javaFunctions(sc).cassandraTable(EMPLOYERRATINGS_KEYSPACE, VALIDATION_TABLE);
-		JavaRDD<Tuple2<Object, Object>> validationJavaRdd = validationsCassRdd.map(validationRow -> new Tuple2<Object, Object>(validationRow.getInt(USER_COL), validationRow.getInt(PRODUCT_COL)));
-		JavaRDD<Rating> predictionJavaRdd = model.predict(JavaRDD.toRDD(validationJavaRdd)).toJavaRDD();
+		JavaRDD<Tuple2<Object, Object>> validationJavaTuplesRdd = validationsCassRdd.map(validationRow -> new Tuple2<Object, Object>(validationRow.getInt(USER_COL), validationRow.getInt(PRODUCT_COL)));
+		JavaRDD<Rating> predictionJavaRdd = model.predict(JavaRDD.toRDD(validationJavaTuplesRdd)).toJavaRDD();
 
-		calculateMeanSquaredError(model, predictionJavaRdd, validationsCassRdd);
-		printComparison(predictionJavaRdd, validationsCassRdd);
+		validate(predictionJavaRdd, validationsCassRdd);
 	}
 
-	private static void calculateMeanSquaredError(MatrixFactorizationModel model, JavaRDD<Rating> prediction,CassandraJavaRDD<CassandraRow> validationsCassRdd) {
-		JavaRDD<Tuple2<Object, Object>> userProducts = prediction.map(r -> new Tuple2<Object, Object>(r.user(), r.product()));
-		JavaPairRDD<Tuple2<Integer, Integer>, Double> predictions = JavaPairRDD.fromJavaRDD(model.predict(JavaRDD.toRDD(userProducts)).toJavaRDD().map(r -> new Tuple2<Tuple2<Integer, Integer>, Double>(new Tuple2<Integer, Integer>(r.user(), r.product()), r.rating())));
-		JavaRDD<Rating> validationData = validationsCassRdd.map(validationRow -> new Rating(validationRow.getInt(USER_COL), validationRow.getInt(PRODUCT_COL), validationRow.getInt(RATING_COL)));
-		JavaRDD<Tuple2<Double, Double>> validationAndPredictions = JavaPairRDD.fromJavaRDD(validationData.map(r -> new Tuple2<Tuple2<Integer, Integer>, Double>(new Tuple2<Integer, Integer>(r.user(), r.product()), r.rating()))).join(predictions).values();
+	private static double calculateMeanSquaredError(JavaRDD<Rating> predictionsJavaRDD, CassandraJavaRDD<CassandraRow> validationsCassRdd) {
+
+		JavaPairRDD<Tuple2<Integer, Integer>, Double> predictionsJavaPairs = JavaPairRDD.fromJavaRDD(predictionsJavaRDD.map(pred -> new Tuple2<Tuple2<Integer, Integer>, Double>(new Tuple2<Integer, Integer>(pred.user(), pred.product()), pred.rating())));
+
+		JavaRDD<Rating> validationRatings = validationsCassRdd.map(validation -> new Rating(validation.getInt(USER_COL), validation.getInt(PRODUCT_COL), validation.getInt(RATING_COL)));
+		System.out.println(JavaPairRDD.fromJavaRDD(validationRatings.map(validationRating -> new Tuple2<Tuple2<Integer, Integer>, Double>(new Tuple2<Integer, Integer>(validationRating.user(), validationRating.product()), validationRating.rating()))).join(predictionsJavaPairs).collect());
+		JavaRDD<Tuple2<Double, Double>> validationAndPredictions = JavaPairRDD.fromJavaRDD(validationRatings.map(validationRating -> new Tuple2<Tuple2<Integer, Integer>, Double>(new Tuple2<Integer, Integer>(validationRating.user(), validationRating.product()), validationRating.rating()))).join(predictionsJavaPairs).values();
 
 		double meanSquaredError = JavaDoubleRDD.fromRDD(validationAndPredictions.map(pair -> {
-			Double err = pair._1() - pair._2();
-			return (Object) (err * err);
-		}).rdd()).mean();
-		System.out.println("Mean Squared Error " + meanSquaredError);
-		System.out.println();
+			// System.out.println(pair._1()+",\t"+ round(pair._2())+",\tDIFF "+
+			// Math.abs(round(pair._1()-pair._2())));
+				Double err = pair._1() - pair._2();
+				return (Object) (err * err);// No covariance! Double won't do
+
+			}).rdd()).mean();
+
+		return meanSquaredError;
 	}
 
-	private static void printComparison(JavaRDD<Rating> predJavaRdd, CassandraJavaRDD<CassandraRow> validationsCassRdd) {
+	private static void validate(JavaRDD<Rating> predJavaRdd, CassandraJavaRDD<CassandraRow> validationsCassRdd) {
 		Stream<CassandraRow> stream = validationsCassRdd.collect().stream();
-		 
-		java.util.function.Function< CassandraRow, Tuple2<Integer, Integer>> keyMapper = validationRow -> new Tuple2<Integer, Integer>(validationRow.getInt(USER_COL) , validationRow.getInt(PRODUCT_COL));
-		java.util.function.Function<  CassandraRow,   Double> valueMapper = validationRow -> validationRow.getDouble(RATING_COL);
+
+		java.util.function.Function<CassandraRow, Tuple2<Integer, Integer>> keyMapper = validationRow -> new Tuple2<Integer, Integer>(validationRow.getInt(USER_COL), validationRow.getInt(PRODUCT_COL));
+		java.util.function.Function<CassandraRow, Double> valueMapper = validationRow -> validationRow.getDouble(RATING_COL);
 		java.util.Map<Tuple2<Integer, Integer>, Double> validationMap = stream.collect(Collectors.toMap(keyMapper, valueMapper));
 		List<String> strList = predJavaRdd.collect().stream().sequential().sorted((o1, o2) -> o1.user() == o2.user() ? o1.product() - o2.product() : o1.user() - o2.user()).map(pred -> {
 			double validationRating = validationMap.get(new Tuple2<Integer, Integer>(pred.user(), pred.product()));
-			return pred.user() + ", " + pred.product() + ", " + round(pred.rating(), 1) + ", " + round(validationRating, 1) + "\n";
+			return pred.user() + ", " + pred.product() + ", " + round(pred.rating()) + ", " + round(validationRating) + "\n";
 		}).collect(Collectors.toList());
 
-		System.out.println(strList);
+		double mse = calculateMeanSquaredError(predJavaRdd, validationsCassRdd);
+		System.out.println(strList + "\nMSE=" + mse);
+		System.out.println();
+	}
+
+	private static double round(double x) {
+		return round(x, 1);
 	}
 
 	private static double round(double x, int places) {
