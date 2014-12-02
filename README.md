@@ -4,8 +4,9 @@ spark-cassandra-collabfiltering
 Illustrates:
 - Collaborative filtering with MLLib on Spark 
 - Using  Java (rather than Spark's core language, Scala)
+- New Java 8 features that make Sparks functional style much easier
 - Using data in Cassandra (rather than HBase/HDFS or some other a filesystem)
-- A demo data set and validation set of employee ratings for  the companies they work at
+- A demo data set and validation set of employee ratings for companies 
 
 Does not illustrate:
 - Clustering of Spark or Cassandra
@@ -22,31 +23,28 @@ Get [Spark](http://spark.apache.org/downloads.html)
 
 Get Eclipse
 - Download Eclipse Luna 4.4.1 Ubuntu 64 Bit (or 32 Bit) from https://eclipse.org/downloads/
-- Set your Java 8 JDK as the default JDK. 
 - Untar, Run
+- Set your Java 8 JDK as the default JDK.
 - Install Maven2 Eclipse, 
     - *Menu Help -> Install New Software…*
     - Add [this repository](http://download.eclipse.org/technology/m2e/releases)
     - Check Maven Integration for Eclipse, then install.
 
 Project 
-- Create project with *New-> Project -> Maven Project*
-- Right-click on ````pom.xml````, choose build, target install.
+- Right-click on ````pom.xml````, choose *install*.
 - This will now download Spark jars; it will take a while.
 - It will also set your Eclipse project's source level to Java 8.
  
 Cassandra
-- Instructions for getting it [here](http://www.datastax.com/documentation/cassandra/2.0/cassandra/install/installDeb_t.html)
+- Instructions for getting Cassandra [here](http://www.datastax.com/documentation/cassandra/2.0/cassandra/install/installDeb_t.html)
 - Run Cassandra
 ````sudo /usr/bin/cassandra````
-- This is for development only. We will be runnning Cassandra and Spark locally with console, rather than remotely in a cluster as daemon/service.
-- Create schema by running attached SQL.
-- In workspace root, run
- ````cqlsh -f ./collabfilter/src/sql/collab_filter_schema.sql````
-- Load data
-````cqlsh -f ./collabfilter/src/sql/load_data.sql````
+- We will be runnning Cassandra and Spark locally with console, rather than remotely in a cluster as daemon/service.
+- Create schema by running attached SQL as follows:
+    - In workspace root, run
+     ````cqlsh -f ./collabfilter/src/sql/collab_filter_schema.sql````
 
-References:
+More references:
 - QuickStart has [more on setup](https://spark.apache.org/docs/1.1.0/quick-start.html)
 - You can find a [collaborative filtering tutorial for Spark](https://spark.apache.org/docs/1.1.0/mllib-collaborative-filtering.html)  and a [tutorial on the Spark-Cassandra Java connector](http://www.datastax.com/dev/blog/accessing-cassandra-from-spark-in-java) which I drew on.
 - However, note that the example code in the Spark-Cassandra tutorial is outdated. The Java API class was [moved to](https://github.com/datastax/spark-cassandra-connector/commit/36ad9cd6c13600144e3e27533587db926e41af2e)  the  japi subpackage.
