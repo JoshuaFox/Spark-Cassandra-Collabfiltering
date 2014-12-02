@@ -36,8 +36,8 @@ Project
 - It will also set your Eclipse project's source level to Java 8.
 
 Dataset
-- ratings.csv is generated from ratings.ods, which is a spreadsheet for generating synthesized data sets to test and fine tune your model. 
-- Adjust Ratings.ods and save as CSV.
+- ````ratings.csv```` is generated from ````ratings.ods````, which is a spreadsheet for generating synthesized data sets to test and fine tune your model. 
+- Adjust ````ratings.ods```` and save as CSV.
 - 
 Cassandra
 - Instructions for getting Cassandra [here](http://www.datastax.com/documentation/cassandra/2.0/cassandra/install/installDeb_t.html)
