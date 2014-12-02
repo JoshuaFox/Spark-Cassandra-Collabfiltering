@@ -31,10 +31,14 @@ Get Eclipse
     - Check Maven Integration for Eclipse, then install.
 
 Project 
-- Right-click on ````pom.xml````, choose *install*.
+- Right-click on ````pom.xml````, choose  *Maven-> install*.
 - This will now download Spark jars; it will take a while.
 - It will also set your Eclipse project's source level to Java 8.
- 
+
+Dataset
+- ratings.csv is generated from ratings.ods, which is a spreadsheet for generating synthesized data sets to test and fine tune your model. 
+- Adjust Ratings.ods and save as CSV.
+- 
 Cassandra
 - Instructions for getting Cassandra [here](http://www.datastax.com/documentation/cassandra/2.0/cassandra/install/installDeb_t.html)
 - Run Cassandra
