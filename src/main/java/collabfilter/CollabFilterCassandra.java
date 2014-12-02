@@ -5,9 +5,11 @@ import static com.datastax.spark.connector.japi.CassandraJavaUtil.javaFunctions;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaDoubleRDD;
 import org.apache.spark.api.java.JavaPairRDD;
@@ -16,6 +18,7 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.mllib.recommendation.ALS;
 import org.apache.spark.mllib.recommendation.MatrixFactorizationModel;
 import org.apache.spark.mllib.recommendation.Rating;
+import org.apache.spark.rdd.RDD;
 
 import scala.Tuple2;
 
@@ -31,7 +34,6 @@ public class CollabFilterCassandra {
 
 	private static final String INPUT_SET = "I,";
 	private static final String VALIDATION_SET = "V,";
-
 	private static final String LOCALHOST = "localhost";
 	private static final String LOCAL_MASTER = "local[4]";
 
@@ -47,21 +49,22 @@ public class CollabFilterCassandra {
 	private static final String CASSANDRA_HOST = LOCALHOST;
 	private static final String RATINGS_CSV = "data/csv/ratings.csv";
 
+	private static int ITER = 20;
+	private static int RANK = 6;
+	private static double LAMBDA = 0.01;
+
 	public static void main(String[] args) {
 		SparkConf conf = new SparkConf().setAppName("Collaborative Filtering with Cassandra").set("spark.master", SPARK_MASTER).set("spark.cassandra.connection.host", CASSANDRA_HOST);
 		JavaSparkContext sparkCtx = new JavaSparkContext(conf);
-		CassandraConnector cassandraConnector = CassandraConnector.apply(sparkCtx.getConf());
+		MatrixFactorizationModel model = trainAndValidate(sparkCtx);
+	}
 
+	private static MatrixFactorizationModel trainAndValidate(JavaSparkContext sparkCtx) {
+		CassandraConnector cassandraConnector = CassandraConnector.apply(sparkCtx.getConf());
 		try (Session session = cassandraConnector.openSession()) {
 			setupData(sparkCtx, session);
-			for (int rank=2;rank<=5;rank++){
-				for (int iter=10;iter<=30;iter+=10){
-					trainAndValidate(sparkCtx, rank, iter);
-				}
-			}
+			return trainAndValidate(sparkCtx, RANK, ITER);
 		}
-		mseList.sort((tuple1, tuple2)->tuple1._1().compareTo(tuple2._1()));
-		System.out.println(mseList);
 	}
 
 	private static void setupData(JavaSparkContext sparkCtx, Session cassSession) {
@@ -79,74 +82,77 @@ public class CollabFilterCassandra {
 			String[] fields = line.split(",");
 			return new RatingDO(Integer.parseInt(fields[1]), Integer.parseInt(fields[2]), Double.parseDouble(fields[3]));
 		};
-		save(RATINGS_TABLE, loadCsv(INPUT_SET, sparkCtx, ratingsBuilder));
-		save(VALIDATION_TABLE, loadCsv(VALIDATION_SET, sparkCtx, ratingsBuilder));
+		saveToCassandra(RATINGS_TABLE, loadCsv(INPUT_SET, sparkCtx, ratingsBuilder));
+		saveToCassandra(VALIDATION_TABLE, loadCsv(VALIDATION_SET, sparkCtx, ratingsBuilder));
 	}
 
 	private static JavaRDD<RatingDO> loadCsv(String prefix, JavaSparkContext sc, org.apache.spark.api.java.function.Function<String, RatingDO> ratingsBuilder) {
 		return sc.textFile(RATINGS_CSV).filter(line -> line.startsWith(prefix)).map(ratingsBuilder);
 	}
 
-	private static void save(String table, JavaRDD<RatingDO> rdd) {
+	private static void saveToCassandra(String table, JavaRDD<RatingDO> rdd) {
 		RDDAndDStreamCommonJavaFunctions<RatingDO>.WriterBuilder writerBuilder = CassandraJavaUtil.javaFunctions(rdd).writerBuilder(EMPLOYERRATINGS_KEYSPACE, table, CassandraJavaUtil.mapToRow(RatingDO.class));
 		writerBuilder.saveToCassandra();
 	}
 
-	private static void trainAndValidate(JavaSparkContext sc, int rank, int iterations) {
+	private static MatrixFactorizationModel trainAndValidate(JavaSparkContext sc, int rank, int iterations) {
+		MatrixFactorizationModel model = train(sc);
+		predictAndValidate(sc, model);
+		return model;
+	}
+
+	private static MatrixFactorizationModel train(JavaSparkContext sc) {
 		CassandraJavaRDD<CassandraRow> trainingRdd = javaFunctions(sc).cassandraTable(EMPLOYERRATINGS_KEYSPACE, RATINGS_TABLE);
 		JavaRDD<Rating> trainingJavaRdd = trainingRdd.map(trainingRow -> new Rating(trainingRow.getInt(USER_COL), trainingRow.getInt(PRODUCT_COL), trainingRow.getDouble(RATING_COL)));
-	 
-		final String s = "RANK "+rank+"\tITER "+iterations+"\t";
-		System.out.print(s);
-	 
-		final double lambda = 0.01;
-		MatrixFactorizationModel model = ALS.train(JavaRDD.toRDD(trainingJavaRdd), rank, iterations, lambda);
-		predictAndValidate(sc, model, trainingJavaRdd, s);
+		MatrixFactorizationModel model = ALS.train(JavaRDD.toRDD(trainingJavaRdd), RANK, ITER, LAMBDA);
+		return model;
 	}
 
-	private static void predictAndValidate(JavaSparkContext sc, MatrixFactorizationModel model, JavaRDD<Rating> trainingJavaRdd, String sss) {
+	private static void predictAndValidate(JavaSparkContext sc, MatrixFactorizationModel model) {
 		CassandraJavaRDD<CassandraRow> validationsCassRdd = javaFunctions(sc).cassandraTable(EMPLOYERRATINGS_KEYSPACE, VALIDATION_TABLE);
-		JavaRDD<Tuple2<Object, Object>> validationJavaTuplesRdd = validationsCassRdd.map(validationRow -> new Tuple2<Object, Object>(validationRow.getInt(USER_COL), validationRow.getInt(PRODUCT_COL)));
-		JavaRDD<Rating> predictionJavaRdd = model.predict(JavaRDD.toRDD(validationJavaTuplesRdd)).toJavaRDD();
-		validate(predictionJavaRdd, validationsCassRdd, sss);
+		final RDD<Tuple2<Object, Object>> validationsRdd = JavaRDD.toRDD(validationsCassRdd.map(validationRow -> new Tuple2<Object, Object>(validationRow.getInt(USER_COL), validationRow.getInt(PRODUCT_COL))));
+		JavaRDD<Rating> predictionJavaRdd = model.predict(validationsRdd).toJavaRDD();
+		Double rmse = rootMeanSquaredError(predictionJavaRdd, validationsCassRdd);
+		showResults(predictionJavaRdd, validationsCassRdd, rmse);
+
 	}
 
-	private static double calculateMeanSquaredError(JavaRDD<Rating> predictionsJavaRDD, CassandraJavaRDD<CassandraRow> validationsCassRdd) {
+	private static double rootMeanSquaredError(JavaRDD<Rating> predictionsJavaRDD, CassandraJavaRDD<CassandraRow> validationsCassRdd) {
 		JavaPairRDD<Tuple2<Integer, Integer>, Double> predictionsJavaPairs = JavaPairRDD.fromJavaRDD(predictionsJavaRDD.map(pred -> new Tuple2<Tuple2<Integer, Integer>, Double>(new Tuple2<Integer, Integer>(pred.user(), pred.product()), pred.rating())));
 		JavaRDD<Rating> validationRatings = validationsCassRdd.map(validation -> new Rating(validation.getInt(USER_COL), validation.getInt(PRODUCT_COL), validation.getInt(RATING_COL)));
 		JavaRDD<Tuple2<Double, Double>> validationAndPredictions = JavaPairRDD.fromJavaRDD(validationRatings.map(validationRating -> new Tuple2<Tuple2<Integer, Integer>, Double>(new Tuple2<Integer, Integer>(validationRating.user(), validationRating.product()), validationRating.rating()))).join(predictionsJavaPairs).values();
 
 		double meanSquaredError = JavaDoubleRDD.fromRDD(validationAndPredictions.map(pair -> {
 			Double err = pair._1() - pair._2();
-			return (Object) (err * err);// No covariance! Double won't do
+			return (Object) (err * err);// No covariance! Need to cast to Object
 			}).rdd()).mean();
-
-		return meanSquaredError;
+		double rmse = Math.sqrt(meanSquaredError);
+		return rmse;
 	}
 
-	private static void validate(JavaRDD<Rating> predJavaRdd, CassandraJavaRDD<CassandraRow> validationsCassRdd, String s) {
-		Stream<CassandraRow> stream = validationsCassRdd.collect().stream();
+	private static void showResults(JavaRDD<Rating> predJavaRdd, CassandraJavaRDD<CassandraRow> validationsCassRdd, double rmse) {
+		final String resultStr = "User\tProduct\tPredicted\tActual\tError?\n" + predictionString(predJavaRdd, validationsCassRdd) + "\n" + "RMSE = " + round(rmse, 2);
+		System.out.println(resultStr);
 
-		java.util.function.Function<CassandraRow, Tuple2<Integer, Integer>> keyMapper = validationRow -> new Tuple2<Integer, Integer>(validationRow.getInt(USER_COL), validationRow.getInt(PRODUCT_COL));
-		java.util.function.Function<CassandraRow, Double> valueMapper = validationRow -> validationRow.getDouble(RATING_COL);
-		java.util.Map<Tuple2<Integer, Integer>, Double> validationMap = stream.collect(Collectors.toMap(keyMapper, valueMapper));
-		List<String> strList = predJavaRdd.collect().stream().sequential().sorted((o1, o2) -> o1.user() == o2.user() ? o1.product() - o2.product() : o1.user() - o2.user()).map(pred -> {
-			double validationRating = validationMap.get(new Tuple2<Integer, Integer>(pred.user(), pred.product()));
-			String errWarningString = Math.abs(validationRating - pred.rating()) > 1 ? "\t!!!" : "";
+	}
 
-			return "\n" + pred.user() + "\t" + pred.product() + "\t" + round(pred.rating()) + "\t\t" + round(validationRating) + errWarningString;
-		}).collect(Collectors.toList());
+	private static String  predictionString(JavaRDD<Rating> predJavaRdd, CassandraJavaRDD<CassandraRow> validationsCassRdd) {
+		final java.util.function.Function<CassandraRow, Tuple2<Integer, Integer>> keyMapper = validationRow -> new Tuple2<Integer, Integer>(validationRow.getInt(USER_COL), validationRow.getInt(PRODUCT_COL));
+		final java.util.function.Function<CassandraRow, Double> valueMapper = validationRow -> validationRow.getDouble(RATING_COL);
+		final java.util.Map<Tuple2<Integer, Integer>, Double> validationMap = validationsCassRdd.collect().stream().collect(Collectors.toMap(keyMapper, valueMapper));
 
-		Double mse = calculateMeanSquaredError(predJavaRdd, validationsCassRdd);
-		//String s = "User\tProduct\tPredicted\tActual\tError?" + strList + "\n";
-		String s_ ="MSE=" + round(mse,2);
-		System.out.println(s+s_);
-		final Tuple2<Double, String> tuple2 = new Tuple2<Double, String>(Double.valueOf(mse),s);
-		mseList.add(tuple2);
+		final Function<Rating, String> stringMapper = prediction -> {
+			double validationRating = validationMap.get(new Tuple2<Integer, Integer>(prediction.user(), prediction.product()));
+			String errWarningString = Math.abs(validationRating - prediction.rating()) >= 1 ? "ERR" : "OK";
+			return  prediction.user() + "\t" + prediction.product() + "\t" + round(prediction.rating()) + "\t\t" + round(validationRating) +"\t"+ errWarningString;
+		};
+		final Stream<Rating> sortedPredictions = predJavaRdd.collect().stream().sorted((o1, o2) -> o1.user() == o2.user() ? o1.product() - o2.product() : o1.user() - o2.user());
+		final String ret = sortedPredictions.map(stringMapper).collect(Collectors.joining("\n"));
 		
-		//System.out.println();
+ 
+		return ret;
 	}
-static ArrayList<Tuple2<Double, String>> mseList=new ArrayList<Tuple2<Double,String>>();
+
 	private static double round(double x) {
 		return round(x, 1);
 	}
