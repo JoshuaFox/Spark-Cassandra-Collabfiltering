@@ -1,15 +1,10 @@
-package collabfilter;
+package collabfilter.java8;
 
 import static com.datastax.spark.connector.japi.CassandraJavaUtil.javaFunctions;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaDoubleRDD;
 import org.apache.spark.api.java.JavaPairRDD;
@@ -23,12 +18,13 @@ import org.apache.spark.rdd.RDD;
 import scala.Tuple2;
 
 import com.datastax.driver.core.Session;
-import com.datastax.driver.core.utils.UUIDs;
 import com.datastax.spark.connector.cql.CassandraConnector;
 import com.datastax.spark.connector.japi.CassandraJavaUtil;
 import com.datastax.spark.connector.japi.CassandraRow;
 import com.datastax.spark.connector.japi.RDDAndDStreamCommonJavaFunctions;
 import com.datastax.spark.connector.japi.rdd.CassandraJavaRDD;
+
+import dataobject.RatingDO;
 
 public class CollabFilterCassandra {
 
@@ -133,23 +129,21 @@ public class CollabFilterCassandra {
 	private static void showResults(JavaRDD<Rating> predJavaRdd, CassandraJavaRDD<CassandraRow> validationsCassRdd, double rmse) {
 		final String resultStr = "User\tProduct\tPredicted\tActual\tError?\n" + predictionString(predJavaRdd, validationsCassRdd) + "\n" + "RMSE = " + round(rmse, 2);
 		System.out.println(resultStr);
-
 	}
 
-	private static String  predictionString(JavaRDD<Rating> predJavaRdd, CassandraJavaRDD<CassandraRow> validationsCassRdd) {
+	private static String predictionString(JavaRDD<Rating> predJavaRdd, CassandraJavaRDD<CassandraRow> validationsCassRdd) {
 		final java.util.function.Function<CassandraRow, Tuple2<Integer, Integer>> keyMapper = validationRow -> new Tuple2<Integer, Integer>(validationRow.getInt(USER_COL), validationRow.getInt(PRODUCT_COL));
 		final java.util.function.Function<CassandraRow, Double> valueMapper = validationRow -> validationRow.getDouble(RATING_COL);
 		final java.util.Map<Tuple2<Integer, Integer>, Double> validationMap = validationsCassRdd.collect().stream().collect(Collectors.toMap(keyMapper, valueMapper));
 
-		final Function<Rating, String> stringMapper = prediction -> {
+		final java.util.function.Function<Rating, String> stringMapper = prediction -> {
 			double validationRating = validationMap.get(new Tuple2<Integer, Integer>(prediction.user(), prediction.product()));
 			String errWarningString = Math.abs(validationRating - prediction.rating()) >= 1 ? "ERR" : "OK";
-			return  prediction.user() + "\t" + prediction.product() + "\t" + round(prediction.rating()) + "\t\t" + round(validationRating) +"\t"+ errWarningString;
+			return prediction.user() + "\t" + prediction.product() + "\t" + round(prediction.rating()) + "\t\t" + round(validationRating) + "\t" + errWarningString;
 		};
 		final Stream<Rating> sortedPredictions = predJavaRdd.collect().stream().sorted((o1, o2) -> o1.user() == o2.user() ? o1.product() - o2.product() : o1.user() - o2.user());
 		final String ret = sortedPredictions.map(stringMapper).collect(Collectors.joining("\n"));
-		
- 
+
 		return ret;
 	}
 
@@ -160,39 +154,5 @@ public class CollabFilterCassandra {
 	private static double round(double x, int places) {
 		double factor = Math.pow(10, places);
 		return Math.round(factor * x) / factor;
-	}
-
-	public static class RatingDO {
-		private UUID id;
-		private int product;
-		private int user;
-		private double rating;
-
-		public RatingDO(UUID id, int user, int product, double rating) {
-			this.id = id;
-			this.user = user;
-			this.product = product;
-			this.rating = rating;
-		}
-
-		public RatingDO(int user, int product, double rating) {
-			this(UUIDs.timeBased(), user, product, rating);
-		}
-
-		public UUID getId() {
-			return this.id;
-		}
-
-		public int getUser() {
-			return this.user;
-		}
-
-		public double getProduct() {
-			return this.product;
-		}
-
-		public double getRating() {
-			return this.rating;
-		}
 	}
 }
