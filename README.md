@@ -22,11 +22,12 @@ Get [Spark](http://spark.apache.org/downloads.html)
 
 Get Eclipse
 - Download Eclipse Luna 4.4.1 Ubuntu 64 Bit (or 32 Bit) from https://eclipse.org/downloads/
-- Untar, Run, Add m2e Maven Integration
 - Set your Java 8 JDK as the default JDK. 
-- Install Maven2 Eclipse, with *Menu Help -> Install New Software…*
-- Add [this repository](http://download.eclipse.org/technology/m2e/releases)
-- Check Maven Integration for Eclipse, then install.
+- Untar, Run
+- Install Maven2 Eclipse, 
+    - *Menu Help -> Install New Software…*
+    - Add [this repository](http://download.eclipse.org/technology/m2e/releases)
+    - Check Maven Integration for Eclipse, then install.
 
 Project 
 - Create project with *New-> Project -> Maven Project*
