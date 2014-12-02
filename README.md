@@ -38,7 +38,7 @@ Project
 Dataset
 - ````ratings.csv```` is generated from ````ratings.ods````, which is a spreadsheet for generating synthesized data sets to test and fine tune your model. 
 - Adjust ````ratings.ods```` and save as CSV.
-- 
+ 
 Cassandra
 - Instructions for getting Cassandra [here](http://www.datastax.com/documentation/cassandra/2.0/cassandra/install/installDeb_t.html)
 - Run Cassandra
