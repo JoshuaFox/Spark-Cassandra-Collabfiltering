@@ -16,10 +16,10 @@ To setup (tested on Ubuntu 14.04):
     - Untar the spark tarball. (E.g., in ````~/dev````)
     - Test the installation with 
     ````./bin/run-example SparkPi````
-- See QuickStart in References below. 
+- See QuickStart in below for more instructions and tutorials on setup.
 
 Get Eclipse:
-- Download Eclipse Luna 4.4.1 Ubuntu 64 Bit (or 32 Bit) from https://eclipse.org/downloads/
+- Download Eclipse Luna 4.4.1 Ubuntu 64 Bit (or 32 Bit) from [Eclipse.org](https://eclipse.org/downloads/)
 - Untar, Run
 - Set your Java 8 JDK as the default JDK.
 - Install Maven2 Eclipse, 
@@ -38,7 +38,7 @@ Dataset
  
 Cassandra
 - Instructions for getting Cassandra [here](http://www.datastax.com/documentation/cassandra/2.0/cassandra/install/installDeb_t.html)
-- Run Cassandra
+- Run Cassandra:
 ````sudo /usr/bin/cassandra````
 - We will be runnning Cassandra and Spark locally with console, rather than remotely in a cluster as daemon/service.
 - Create schema by running attached SQL as follows:
@@ -46,10 +46,11 @@ Cassandra
      ````cqlsh -f ./collabfilter/src/sql/collab_filter_schema.sql````
 
 Running tests:
--  Run ```collabfilter.CollabFilterCassandraDriver.main````, or else the ````CollabFilterTest```` unit test.
+-  Run ```collabfilter.CollabFilterCassandraDriver.main````,
+or else the ````CollabFilterTest```` unit test.
 
 More references:
-- QuickStart has [more on setup](https://spark.apache.org/docs/1.1.0/quick-start.html)
+- QuickStart has [more on setup](https://spark.apache.org/docs/1.1.0/quick-start.html).
 - You can find a [collaborative filtering tutorial for Spark](https://spark.apache.org/docs/1.1.0/mllib-collaborative-filtering.html)  and a [tutorial on the Spark-Cassandra Java connector](http://www.datastax.com/dev/blog/accessing-cassandra-from-spark-in-java) which I drew on.
 - However, note that the example code in the Spark-Cassandra tutorial is outdated. The Java API class was [moved to](https://github.com/datastax/spark-cassandra-connector/commit/36ad9cd6c13600144e3e27533587db926e41af2e)  the  japi subpackage.
 - Bug in Guava version. The ````pom.xml```` specifies Guava 15. This is because the Guava 14 used with the Spark-Cassandra connector is mismatched to the Guava 15 or above expected by Spark, which includes additional methods.
