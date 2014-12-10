@@ -3,19 +3,19 @@ spark-cassandra-collabfiltering
 
 Illustrates:
 - Collaborative filtering with MLLib on Spark 
-- Using  Java (rather than Spark's core language, Scala)
+- Using  Java to interface with Spark's core language, Scala
 - New Java 8 features that make Sparks functional style much easier
 - Using data in Cassandra (rather than HBase/HDFS or some other a filesystem)
 - A demo data set and validation set of employee ratings for companies 
 
 To setup (tested on Ubuntu 14.04):
-Install JDK Java8 
-````sudo apt-get install oracle-java8-installer````
-Get [Spark](http://spark.apache.org/downloads.html)
-- Download 1.1.0 for Hadoop 2.4. We will not be using Hadoop even though this build supports it.
-- Untar the spark tarball. (E.g., in ````~/dev````)
-- Test the installation with 
-````./bin/run-example SparkPi````
+- Install JDK Java8 
+    ````sudo apt-get install oracle-java8-installer````
+- Get [Spark](http://spark.apache.org/downloads.html)
+    - Download 1.1.0 for Hadoop 2.4. We will not be using Hadoop even though this build supports it.
+    - Untar the spark tarball. (E.g., in ````~/dev````)
+    - Test the installation with 
+    ````./bin/run-example SparkPi````
 - See QuickStart in References below. 
 
 Get Eclipse:
