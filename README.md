@@ -8,10 +8,7 @@ Illustrates:
 - Using data in Cassandra (rather than HBase/HDFS or some other a filesystem)
 - A demo data set and validation set of employee ratings for companies 
 
-Does not illustrate:
-- Clustering of Spark or Cassandra
-
-To setup on Ubuntu 14.04:
+To setup (tested on Ubuntu 14.04):
 Install JDK Java8 
 ````sudo apt-get install oracle-java8-installer````
 Get [Spark](http://spark.apache.org/downloads.html)
@@ -21,7 +18,7 @@ Get [Spark](http://spark.apache.org/downloads.html)
 ````./bin/run-example SparkPi````
 - See QuickStart in References below. 
 
-Get Eclipse
+Get Eclipse:
 - Download Eclipse Luna 4.4.1 Ubuntu 64 Bit (or 32 Bit) from https://eclipse.org/downloads/
 - Untar, Run
 - Set your Java 8 JDK as the default JDK.
@@ -47,6 +44,9 @@ Cassandra
 - Create schema by running attached SQL as follows:
     - In workspace root, run
      ````cqlsh -f ./collabfilter/src/sql/collab_filter_schema.sql````
+
+Running tests:
+-  Run ```collabfilter.CollabFilterCassandraDriver.main````, or else the ````CollabFilterTest```` unit test.
 
 More references:
 - QuickStart has [more on setup](https://spark.apache.org/docs/1.1.0/quick-start.html)
