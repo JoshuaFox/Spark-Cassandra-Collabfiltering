@@ -3,15 +3,15 @@ spark-cassandra-collabfiltering
 
 Illustrates:
 - Collaborative filtering with MLLib on Spark 
-- Using  Java to interface with Spark's core language, Scala
+- Java to interface with Spark's core language, Scala
 - New Java 8 features that make Sparks functional style much easier
-- Using data in Cassandra (rather than HBase/HDFS or some other a filesystem)
-- A demo data set and validation set of employee ratings for companies 
+- Cassandra providing the data to Spark (rather than HBase/HDFS or some other filesystem)
+- A synthesized training/validation set of employee ratings for companies 
 
 To setup (tested on Ubuntu 14.04):
-- Install JDK Java8 
+- Install JDK Java8.
     ````sudo apt-get install oracle-java8-installer````
-- Get [Spark](http://spark.apache.org/downloads.html)
+- Get [Spark](http://spark.apache.org/downloads.html).
     - Download 1.1.0 for Hadoop 2.4. We will not be using Hadoop even though this build supports it.
     - Untar the spark tarball. (E.g., in ````~/dev````)
     - Test the installation with 
@@ -19,8 +19,8 @@ To setup (tested on Ubuntu 14.04):
 - See QuickStart in below for more instructions and tutorials on setup.
 
 Get Eclipse:
-- Download Eclipse Luna 4.4.1 Ubuntu 64 Bit (or 32 Bit) from [Eclipse.org](https://eclipse.org/downloads/)
-- Untar, Run
+- Download Eclipse Luna 4.4.1 Ubuntu 64 Bit (or 32 Bit) from [Eclipse.org](https://eclipse.org/downloads/). Only the latest Eclipse supports Java 8.
+- Untar, run Eclipse.
 - Set your Java 8 JDK as the default JDK.
 - Install Maven2 Eclipse, 
     - *Menu Help -> Install New Software…*
@@ -33,11 +33,11 @@ Project
 - It will also set your Eclipse project's source level to Java 8.
 
 Dataset
-- ````ratings.csv```` is generated from ````ratings.ods````, which is a spreadsheet for generating synthesized data sets to test and fine tune your model. 
-- Adjust ````ratings.ods```` and save as CSV. See readme.txt in data directory for instructions.
+- ````ratings.csv```` is generated from ````ratings.ods````, which is a spreadsheet for  synthesizing data sets to test and fine tune your model. 
+- Adjust ````ratings.ods```` and save as CSV. See ````readme.txt```` in data directory for instructions.
  
 Cassandra
-- Instructions for getting Cassandra [here](http://www.datastax.com/documentation/cassandra/2.0/cassandra/install/installDeb_t.html)
+- Instructions for getting Cassandra: [here](http://www.datastax.com/documentation/cassandra/2.0/cassandra/install/installDeb_t.html)
 - Run Cassandra:
 ````sudo /usr/bin/cassandra````
 - We will be runnning Cassandra and Spark locally with console, rather than remotely in a cluster as daemon/service.
@@ -46,8 +46,7 @@ Cassandra
      ````cqlsh -f ./collabfilter/src/sql/collab_filter_schema.sql````
 
 Running tests:
--  Run ```collabfilter.CollabFilterCassandraDriver.main````,
-or else the ````CollabFilterTest```` unit test.
+-  Run ````collabfilter.CollabFilterCassandraDriver.main```` or  the ````CollabFilterTest```` unit test.
 
 More references:
 - QuickStart has [more on setup](https://spark.apache.org/docs/1.1.0/quick-start.html).
