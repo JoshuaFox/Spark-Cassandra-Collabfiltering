@@ -3,8 +3,8 @@ spark-cassandra-collabfiltering
 
 Illustrates:
 - Collaborative filtering with MLLib on Spark 
-- Java to interface with Spark's core language, Scala
-- New Java 8 features that make Sparks functional style much easier
+- The same Spark client code written in Java 7 and Java 8 show the new Java 8 features that make Spark's functional style much easier
+- - Java invoking Spark's core language, Scala
 - Cassandra providing the data to Spark (rather than HBase/HDFS or some other filesystem)
 - A synthesized training/validation set of employee ratings for companies 
 
