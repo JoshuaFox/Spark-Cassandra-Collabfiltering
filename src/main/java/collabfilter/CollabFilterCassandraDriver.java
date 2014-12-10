@@ -44,7 +44,6 @@ public class CollabFilterCassandraDriver implements Closeable {
 			cfcDriver.truncateTables();
 			cfcDriver.populateTables();
 			cfcDriver.trainAndValidate(version);
-
 		}
 	}
 
@@ -62,7 +61,7 @@ public class CollabFilterCassandraDriver implements Closeable {
 			MatrixFactorizationModel model = cfc.train(this.sparkCtx, this.cassandraConnector);
 			CassandraJavaRDD<CassandraRow> validationsCassRdd = javaFunctions(this.sparkCtx).cassandraTable(RatingDO.EMPLOYERRATINGS_KEYSPACE, RatingDO.VALIDATION_TABLE);
 			JavaRDD<Rating> predictionJavaRdd = cfc.predict(model, validationsCassRdd);
-			double rmse = cfc.calculateRootMeanSquareError(predictionJavaRdd, validationsCassRdd);
+			double rmse = cfc.validate(predictionJavaRdd, validationsCassRdd);
 			System.out.println(cfc.resultsReport(predictionJavaRdd, validationsCassRdd, rmse));
 			return rmse;
 		}

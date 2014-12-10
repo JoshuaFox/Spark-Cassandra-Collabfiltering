@@ -59,7 +59,7 @@ public class CollabFilterCassandra7 implements ICollabFilterCassandra, Serializa
 		return predictionJavaRdd;
 	}
 
-	public double calculateRootMeanSquareError(JavaRDD<Rating> predictionJavaRdd, CassandraJavaRDD<CassandraRow> validationsCassRdd) {
+	public double validate(JavaRDD<Rating> predictionJavaRdd, CassandraJavaRDD<CassandraRow> validationsCassRdd) {
 		JavaPairRDD<Tuple2<Integer, Integer>, Double> predictionsJavaPairs = JavaPairRDD.fromJavaRDD(predictionJavaRdd.map(new org.apache.spark.api.java.function.Function<Rating, Tuple2<Tuple2<Integer, Integer>, Double>>() {
 			@Override
 			public Tuple2<Tuple2<Integer, Integer>, Double> call(Rating pred) throws Exception {
