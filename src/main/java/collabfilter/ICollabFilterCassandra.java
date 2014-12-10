@@ -11,7 +11,6 @@ import com.datastax.spark.connector.japi.rdd.CassandraJavaRDD;
 
 public interface ICollabFilterCassandra {
 
-
 	MatrixFactorizationModel train(JavaSparkContext sparkCtx, CassandraConnector cassandraConnector);
 
 	JavaRDD<Rating> predict(MatrixFactorizationModel model, CassandraJavaRDD<CassandraRow> validationsCassRdd);
