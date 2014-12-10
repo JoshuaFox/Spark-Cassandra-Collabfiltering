@@ -4,7 +4,7 @@ spark-cassandra-collabfiltering
 Illustrates:
 - Collaborative filtering with MLLib on Spark 
 - The same Spark client code written in Java 7 and Java 8, showing the new Java 8 features that make Spark's functional style much easier
-- Cassandra providing the data to Spark (rather than HBase/HDFS or some other filesystem)
+- Cassandra providing the data to Spark
 - A synthesized training/validation set of employee ratings for companies 
 
 To setup (tested on Ubuntu 14.04):
